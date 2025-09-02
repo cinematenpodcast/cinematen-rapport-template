@@ -24,23 +24,24 @@ let monthsOrder = [];
 async function populateInitialData() {
     const batch = writeBatch(db);
     const initialData = {
-        "dec-2024": { listens: 565, shortName: "Dec '24", fullName: "December 2024", order: 1, medianRetention: null },
-        "jan-2025": { listens: 660, shortName: "Jan '25", fullName: "Januari 2025", order: 2, medianRetention: 65 },
-        "feb-2025": { listens: 663, shortName: "Feb '25", fullName: "Februari 2025", order: 3, medianRetention: 65 },
-        "mar-2025": { listens: 679, shortName: "Mrt '25", fullName: "Maart 2025", order: 4, medianRetention: 88 },
-        "apr-2025": { listens: 806, shortName: "Apr '25", fullName: "April 2025", order: 5, medianRetention: 79 },
-        "may-2025": { listens: 1069, shortName: "Mei '25", fullName: "Mei 2025", order: 6, medianRetention: 83 },
-        "jun-2025": { listens: 865, shortName: "Jun '25", fullName: "Juni 2025", order: 7, medianRetention: 80 }
+        "dec-2024": { listens: 565, shortName: "Dec '24", fullName: "December 2024", order: 0 },
+        "jan-2025": { listens: 660, shortName: "Jan '25", fullName: "Januari 2025", order: 1 },
+        "feb-2025": { listens: 663, shortName: "Feb '25", fullName: "Februari 2025", order: 2 },
+        "mar-2025": { listens: 679, shortName: "Mrt '25", fullName: "Maart 2025", order: 3 },
+        "apr-2025": { listens: 806, shortName: "Apr '25", fullName: "April 2025", order: 4 },
+        "may-2025": { listens: 1069, shortName: "Mei '25", fullName: "Mei 2025", order: 5 },
+        "jun-2025": { listens: 865, shortName: "Jun '25", fullName: "Juni 2025", order: 6 },
+        "jul-2025": { listens: 950, shortName: "Jul '25", fullName: "Juli 2025", order: 7 }
     };
 
-    console.log("Populating/updating data with June included...");
+    console.log("Populating/updating data with July included...");
     for (const [key, value] of Object.entries(initialData)) {
         const docRef = doc(db, "monthly-stats", key);
         batch.set(docRef, value);
     }
 
     await batch.commit();
-    console.log("Data updated successfully with June included.");
+    console.log("Data updated successfully with July included.");
 }
 
 // Function to manually populate/update data if needed (use in console)
@@ -68,8 +69,7 @@ async function fetchAndInitialize() {
                 const data = doc.data();
                 podcastData[doc.id] = { 
                     listens: data.listens, 
-                    shortName: data.shortName, 
-                    medianRetention: data.medianRetention 
+                    shortName: data.shortName
                 };
                 fullMonthNames[doc.id] = data.fullName;
                 monthsOrder.push(doc.id);
@@ -80,8 +80,7 @@ async function fetchAndInitialize() {
                 const data = doc.data();
                 podcastData[doc.id] = { 
                     listens: data.listens, 
-                    shortName: data.shortName, 
-                    medianRetention: data.medianRetention 
+                    shortName: data.shortName
                 };
                 fullMonthNames[doc.id] = data.fullName;
                 monthsOrder.push(doc.id);
@@ -149,15 +148,10 @@ function updateMonthInfoCard(monthKey) {
         }
     }
     const groeiText = groei === null ? 'N.v.t.' : (groei >= 0 ? '+' : '') + groei.toFixed(1) + '%';
-    const retentionText = info.medianRetention !== null ? `${info.medianRetention}%` : 'N.v.t.';
-    
     document.getElementById('monthInfoCard').innerHTML = `
         <div><strong>${fullMonthNames[monthKey] || info.shortName}</strong></div>
         <div>Luisterbeurten: <strong>${info.listens.toLocaleString('nl-NL')}</strong></div>
         <div>Groei t.o.v. vorige maand: <strong>${groeiText}</strong></div>
-        <div>Gemiddelde mediane uitluistertijd: <strong>${retentionText}</strong> 
-            <span class="retention-info-icon" title="Dit cijfer is het gemiddelde van de 'mediane luistertijden' van alle afleveringen deze maand. De mediaan is het punt waarop 50% van het publiek nog luistert. Een hoger % betekent dat we de aandacht langer vasthouden.">ℹ️</span>
-        </div>
     `;
 }
 
@@ -176,9 +170,9 @@ function renderChart() {
     listenChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: Object.values(podcastData).map(m => m.shortName),
+            labels: monthsOrder.map(key => podcastData[key].shortName),
             datasets: [{
-                data: Object.values(podcastData).map(m => m.listens),
+                data: monthsOrder.map(key => podcastData[key].listens),
                 backgroundColor: (context) => context.dataIndex === hoverIndex ? '#7c3aed' : '#2E58AE',
                 borderColor: barBorderColor,
                 borderWidth: 1,
